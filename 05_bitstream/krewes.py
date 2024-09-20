@@ -1,4 +1,4 @@
-# Stanley Hoo
+# Leon Huang
 # UWSD
 # SoftDev
 # K05 -- Python dictionaries and random selection
