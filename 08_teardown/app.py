@@ -3,20 +3,22 @@
 '''
 DISCO:
 <note any discoveries you made here... no matter how small!>
+. /path/bin/activate 
 
 QCC:
-0. 
-1. 
-2. 
-3. 
-4. 
-5. 
+0. This is similar to java when you initialize an object
+1. Root directory in terminal
+2. Will print in the terminal
+3. "__main__"
+4. In a website that is linked when the program is run in the terminal
+5. Call to a function 
  ...
 
 INVESTIGATIVE APPROACH:
 <Your concise summary of how
  you and your team set about
  "illuminating the cave of ignorance" here...>
+ Created an venv, installed flask, then ran app.py
 '''
 
 
