@@ -1,6 +1,7 @@
-# Clyde 'Thluffy' Sinclair
+# Cheerio - Leon, Naomi, Tanzeem
 # SoftDev
-# September 2024
+# K09: Putting it Together
+# 2024-09-24
 
 from flask import Flask
 app = Flask(__name__)                 #create instance of class Flask
