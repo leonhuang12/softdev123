@@ -1,8 +1,15 @@
-# Cheerio - Leon, Naomi, Tanzeem
+# Leon Huang
+# Cheerio - Naomi, Leon, Tanzeem
 # SoftDev
 # K09: Putting it Together
 # 2024-09-24
 # time spent: 1
+
+'''
+DISCO:
+access value in key: dict[key] -> values
+
+'''
 
 import csv
 import random
@@ -34,13 +41,27 @@ def choose_random(csvfile):
 
 # keep function definitions above @app.route("/")
 
+def heading():
+    return "<h4> team name: Naomi, Tanzeem, Leon</h4>"
+
+def occ_list():
+    occ_dict = read_csv('occupations.csv')
+    st = '<br>'
+    for key in occ_dict:
+        st = st + '<br>' + occ_dict[key]
+        #print(occ_dict[key])
+    return st
+
 app = Flask(__name__)
 @app.route("/")
 
 def occupation_chooser():
-    st = choose_random('occupations.csv') 
+    st = ''
+    st += heading()
+    st = st + "random occupation: " + choose_random('occupations.csv') 
+    st += occ_list()
     return st
 
 # to do-- display list of occupations, display TPNG+roster(???)
 
-app.run()
+app.run(port=5001)
