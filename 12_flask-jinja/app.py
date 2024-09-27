@@ -1,9 +1,9 @@
-# Leon Huang, Stanley Hoo, Tahmim Hassan
+# Stanley Hoo, Tahmim Hassan, Leon Huang
 # UWSD
 # SoftDev
-# K12 -- Just Plug It In
+# K11 -- Some things Never Change
 # 2024-09-26
-# Time spent: .5
+# time spent: 0.5
 
 """
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
