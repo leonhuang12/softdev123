@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+
+<!--
+Iron Mans:  Abidur Rahman, Leon Huang
+SoftDev
+K20: Tailwind
+2024-11-14
+Time Spent: 1
+-->
+
+<!-- No dark mode -->
+<html>
+
+  <head>
+  	<meta charset="UTF-8">
+  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  	<title>How to Tailwind</title>
+      <!-- Need this -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Customization -->
+    <script>
+        tailwind.config = {
+          theme: {
+              colors: { <!-- Create custom colors-->
+                'blue': '#1fb6ff',
+                'pink': '#ff49db',
+                'orange': '#ff7849',
+                'green': '#13ce66',
+                'yellow': '#ffc82c',
+                'gray-dark': '#273444',
+                'gray': '#8492a6',
+                'gray-light': '#d3dce6',
+                'ghost': '#ffffff',
+                'blaq': '#000000',
+              },
+              fontFamily: {
+                sans: ['Graphik', 'sans-serif'],
+                serif: ['Merriweather', 'serif'],
+              },
+            },
+        }
+    </script>
+  </head>
+
+  <body class="text-center">
+    <h1 class="text-3xl font-bold underline"> <!-- Use class="" in a tag to add customization -->
+        <p class="bg-pink hover:bg-green text-center hover:text-left">Hello World! (Hover me)</p>
+    </h1>
+
+    <br>
+    <!-- Multiple features can be used at once -->
+  	<h1 class="text-xs text-center hover:text-2xl">
+      <p>
+        Hello! Welcome to Tailwind. Tailwind is an extremely customizable front-end framework with a plethora of features. 
+        <br><br> In order to implement Tailwind into any HTMl code, simply put </p> <p class="bg-yellow"> &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt; </p> <p>into your HTML head tag.
+      </p>
+    </h1>
+    <br>
+    <!-- Easily change colors of buttons when viewed normally, hovered, or clicked -->
+  	<button class="bg-yellow active:bg-gray px-4 py-2 text-white sm:px-8 sm:py-3 hover:bg-blue">This button has three different possible colors!</button>
+
+    <br> <br>
+
+    <p class="text-xl text-ghost hover:text-blaq font-serif">
+      The hover feature can also be used like this! <br> The font is different too. <br>
+      This is very easy to do as well and you can customize both color names and font names as well as many other things in the tailwind.config object
+    </p>
+
+    <br><br> 
+
+    <button class="bg-yellow px-4 py-2 text-white sm:px-8 sm:py-3 hover:bg-blue cursor-not-allowed rounded-full">Do NOT Click</button>
+    <br><br>
+    <p class="font-sans">
+      Customization is not limited to just how the site looks, but also other things like your cursor. 
+    </p>
+    
+    <br><br>
+
+    <a href="https://tailwindcss.com/docs/installation/play-cdn" class="visited:text-gray-dark underline active:text-green">
+      View the documentation here!
+    </a>
+    
+  </body>
+
+</html>
+
+<!-- Dark mode enabled -->
+<html class="dark">
+
+  <body>
+    <br><br>
+  <div class="bg-ghost text-ghost dark:bg-blaq">
+    <p>
+      If you're reading this, dark mode is on. <br>
+      One of Tailwind's features involves different site themes for when dark mode is enabled or disabled. <br>
+      Try watching this paragraph disappear once you turn light mode back on. 
+    </p>
+  </div>
+
+  </body>
+</html>
+
