@@ -47,7 +47,7 @@ var removeItem = function(n)
     listitems[n].remove();
 };
 
-//color selected elements red
+//color selected elements red -- doesn't do anything to the items that are already blue (item 1-6)
 var red = function()
 {
     var items = document.getElementsByTagName("li");
@@ -56,7 +56,7 @@ var red = function()
     }
 };
 
-//color a collection in alternating colors
+//color a collection in alternating colors -- doesn't do anything to the items that are already blue (item 1-6)
 var stripe = function()
 {
     var items = document.getElementsByTagName("li");
@@ -72,14 +72,47 @@ var stripe = function()
 
 //insert your implementations here for...
 // FIB
+var fibo = function(n)
+{
+    if(n==0){
+        return 0;
+    }
+    else if(n==1){
+        return 1;
+    }
+    else return fibo(n-1)+fibo(n-2)
+};
 // FAC
+var fact = function(n)
+{
+    if(n<0) {
+        return 0;
+    }
+    else if(n==0) {
+        return 1;
+    }
+    else {
+        return n*fact(n-1)
+    }
+};
 // GCD
-
+var gcd = function(n,j) 
+{
+    if (j==0) {
+        return n;
+    }
+    else {
+        return gcd(j,n%j)
+    }
+};
 
 // In addition to the style shown above,
 //  you are encouraged to test drive the "arrow function syntax" as shown below.
 //  Note anything notable.
-const myFxn = (param1, param2) => {
+const myFxn = (param1, param2) => { // const instead of var and no function before parameters
     // body
     return retVal;
+};
+const myFxn2 = (n) => {
+    return n*2;
 };
