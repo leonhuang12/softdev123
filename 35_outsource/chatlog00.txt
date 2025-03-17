@@ -1,0 +1,160 @@
+To create this collaborative storytelling game/website, we need to implement several key features related to user authentication, story management, and user interaction. Here is a high-level plan for implementing these features:
+
+1. **User Registration and Authentication**
+    - Implement user registration with email verification.
+    - Implement user login and logout functionality.
+
+2. **Story Management**
+    - Allow logged-in users to create a new story with a title and initial content.
+    - Allow logged-in users to add to an existing story but restrict them to only add once.
+    - Show users only the latest update to the story when they add to it.
+
+3. **User Interaction**
+    - Display stories that the logged-in user has contributed to on their homepage.
+    - Ensure users can only add to a story once.
+
+4. **Database Design**
+    - Design database schema to handle users, stories, and contributions effectively.
+
+I'll start by outlining the necessary files and their contents.
+
+### Files and Their Contents
+
+#### User Authentication
+
+```typescript name=auth.ts
+import { Router } from 'express';
+import { registerUser, loginUser, logoutUser } from './controllers/authController';
+
+const router = Router();
+
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/logout', logoutUser);
+
+export default router;
+```
+
+```typescript name=controllers/authController.ts
+import { Request, Response } from 'express';
+import User from '../models/User';
+
+export const registerUser = async (req: Request, res: Response) => {
+    // Registration logic with email verification
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+    // Login logic
+};
+
+export const logoutUser = async (req: Request, res: Response) => {
+    // Logout logic
+};
+```
+
+#### Story Management
+
+```typescript name=story.ts
+import { Router } from 'express';
+import { createStory, addToStory, getUserStories } from './controllers/storyController';
+
+const router = Router();
+
+router.post('/create', createStory);
+router.post('/add/:storyId', addToStory);
+router.get('/user-stories', getUserStories);
+
+export default router;
+```
+
+```typescript name=controllers/storyController.ts
+import { Request, Response } from 'express';
+import Story from '../models/Story';
+import Contribution from '../models/Contribution';
+
+export const createStory = async (req: Request, res: Response) => {
+    // Logic to create a new story
+};
+
+export const addToStory = async (req: Request, res: Response) => {
+    // Logic to add to an existing story
+};
+
+export const getUserStories = async (req: Request, res: Response) => {
+    // Logic to get stories the user has contributed to
+};
+```
+
+#### Database Models
+
+```typescript name=models/User.ts
+import { Schema, model } from 'mongoose';
+
+const userSchema = new Schema({
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    stories: [{ type: Schema.Types.ObjectId, ref: 'Story' }]
+});
+
+export default model('User', userSchema);
+```
+
+```typescript name=models/Story.ts
+import { Schema, model } from 'mongoose';
+
+const storySchema = new Schema({
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    latestUpdate: { type: String, required: true },
+    contributors: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+});
+
+export default model('Story', storySchema);
+```
+
+```typescript name=models/Contribution.ts
+import { Schema, model } from 'mongoose';
+
+const contributionSchema = new Schema({
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    story: { type: Schema.Types.ObjectId, ref: 'Story', required: true },
+    content: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+});
+
+export default model('Contribution', contributionSchema);
+```
+
+### Additional Setup Files
+
+#### Server Setup
+
+```typescript name=server.ts
+import express from 'express';
+import mongoose from 'mongoose';
+import authRoutes from './auth';
+import storyRoutes from './story';
+
+const app = express();
+app.use(express.json());
+
+const PORT = process.env.PORT || 5000;
+
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}).catch(err => {
+    console.error(err);
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/stories', storyRoutes);
+```
+
+This setup provides a solid foundation for the collaborative storytelling game/website. Each component is modular, making it easy to extend and maintain. If you need further details or additional features, please let me know!

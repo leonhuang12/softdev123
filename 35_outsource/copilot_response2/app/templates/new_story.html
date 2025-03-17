@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}New Story{% endblock %}
+{% block content %}
+    <h2>Create a New Story</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.title.label }}<br>
+            {{ form.title(size=32) }}<br>
+            {% for error in form.title.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.content.label }}<br>
+            {{ form.content(cols=40, rows=5) }}<br>
+            {% for error in form.content.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock %}

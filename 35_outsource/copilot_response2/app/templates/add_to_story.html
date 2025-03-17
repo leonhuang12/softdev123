@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Add to Story{% endblock %}
+{% block content %}
+    <h2>Add to Story: {{ story.title }}</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.content.label }}<br>
+            {{ form.content(cols=40, rows=5) }}<br>
+            {% for error in form.content.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock %}

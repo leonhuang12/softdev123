@@ -1,0 +1,510 @@
+Here is the complete project structure and implementation for a collaborative storytelling game/website using Flask, Python, and HTML.
+
+### Project Structure
+
+```
+collaborative_storytelling/
+│
+├── app/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── routes.py
+│   ├── forms.py
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── register.html
+│   │   ├── login.html
+│   │   ├── home.html
+│   │   ├── new_story.html
+│   │   ├── add_to_story.html
+│   │   └── user_stories.html
+│   └── static/
+│
+├── config.py
+├── run.py
+├── requirements.txt
+└── README.md
+```
+
+### Files and Their Contents
+
+#### `run.py`
+
+```python name=run.py
+from app import create_app
+
+app = create_app()
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+#### `config.py`
+
+```python name=config.py
+import os
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///site.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+```
+
+#### `app/__init__.py`
+
+```python name=app/__init__.py
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
+from config import Config
+
+db = SQLAlchemy()
+bcrypt = Bcrypt()
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    db.init_app(app)
+    bcrypt.init_app(app)
+    login_manager.init_app(app)
+
+    from app.routes import main
+    app.register_blueprint(main)
+
+    return app
+```
+
+#### `app/models.py`
+
+```python name=app/models.py
+from datetime import datetime
+from app import db, login_manager
+from flask_login import UserMixin
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    image_file = db.Column(db.String(20), nullable=False, default='default.jpg')
+    password = db.Column(db.String(60), nullable=False)
+    stories = db.relationship('Story', backref='author', lazy=True)
+    contributions = db.relationship('Contribution', backref='contributor', lazy=True)
+
+class Story(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    content = db.Column(db.Text, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    contributions = db.relationship('Contribution', backref='story', lazy=True)
+
+class Contribution(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    story_id = db.Column(db.Integer, db.ForeignKey('story.id'), nullable=False)
+```
+
+#### `app/forms.py`
+
+```python name=app/forms.py
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
+from app.models import User
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Sign Up')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is taken. Please choose a different one.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('That email is taken. Please choose a different one.')
+
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
+
+class StoryForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = TextAreaField('Content', validators=[DataRequired()])
+    submit = SubmitField('Create Story')
+
+class ContributionForm(FlaskForm):
+    content = TextAreaField('Content', validators=[DataRequired()])
+    submit = SubmitField('Add to Story')
+```
+
+#### `app/routes.py`
+
+```python name=app/routes.py
+from flask import render_template, url_for, flash, redirect, request, Blueprint
+from app import db, bcrypt
+from app.forms import RegistrationForm, LoginForm, StoryForm, ContributionForm
+from app.models import User, Story, Contribution
+from flask_login import login_user, current_user, logout_user, login_required
+
+main = Blueprint('main', __name__)
+
+@main.route("/")
+@main.route("/home")
+@login_required
+def home():
+    user_stories = current_user.stories
+    contributions = Contribution.query.filter_by(contributor=current_user).all()
+    return render_template('home.html', stories=user_stories, contributions=contributions)
+
+@main.route("/register", methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.home'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        flash('Your account has been created! You are now able to log in', 'success')
+        return redirect(url_for('main.login'))
+    return render_template('register.html', title='Register', form=form)
+
+@main.route("/login", methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user, remember=True)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('main.home'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
+    return render_template('login.html', title='Login', form=form)
+
+@main.route("/logout")
+def logout():
+    logout_user()
+    return redirect(url_for('main.home'))
+
+@main.route("/story/new", methods=['GET', 'POST'])
+@login_required
+def new_story():
+    form = StoryForm()
+    if form.validate_on_submit():
+        story = Story(title=form.title.data, content=form.content.data, author=current_user)
+        db.session.add(story)
+        db.session.commit()
+        flash('Your story has been created!', 'success')
+        return redirect(url_for('main.home'))
+    return render_template('new_story.html', title='New Story', form=form)
+
+@main.route("/story/<int:story_id>", methods=['GET', 'POST'])
+@login_required
+def add_to_story(story_id):
+    story = Story.query.get_or_404(story_id)
+    form = ContributionForm()
+    if form.validate_on_submit():
+        contribution = Contribution(content=form.content.data, contributor=current_user, story=story)
+        db.session.add(contribution)
+        db.session.commit()
+        flash('Your contribution has been added!', 'success')
+        return redirect(url_for('main.home'))
+    return render_template('add_to_story.html', title='Add to Story', form=form, story=story)
+```
+
+#### `app/templates/base.html`
+
+```html name=app/templates/base.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('main.home') }}">Home</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('main.login') }}">Login</a></li>
+                <li><a href="{{ url_for('main.register') }}">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
+```
+
+#### `app/templates/register.html`
+
+```html name=app/templates/register.html
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+    <h2>Register</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.username.label }}<br>
+            {{ form.username(size=32) }}<br>
+            {% for error in form.username.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.email.label }}<br>
+            {{ form.email(size=32) }}<br>
+            {% for error in form.email.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.password.label }}<br>
+            {{ form.password(size=32) }}<br>
+            {% for error in form.password.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.confirm_password.label }}<br>
+            {{ form.confirm_password(size=32) }}<br>
+            {% for error in form.confirm_password.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock %}
+```
+
+#### `app/templates/login.html`
+
+```html name=app/templates/login.html
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+    <h2>Login</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.email.label }}<br>
+            {{ form.email(size=32) }}<br>
+            {% for error in form.email.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.password.label }}<br>
+            {{ form.password(size=32) }}<br>
+            {% for error in form.password.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock %}
+```
+
+#### `app/templates/home.html`
+
+```html name=app/templates/home.html
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+    <h2>Your Stories</h2>
+    <ul>
+        {% for story in stories %}
+            <li><a href="{{ url_for('main.add_to_story', story_id=story.id) }}">{{ story.title }}</a></li>
+        {% endfor %}
+    </ul>
+    <h2>Your Contributions</h2>
+    <ul>
+        {% for contribution in contributions %}
+            <li>{{ contribution.story.title }}: {{ contribution.content }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('main.new_story') }}">Start a New Story</a>
+{% endblock %}
+```
+
+#### `app/templates/new_story.html`
+
+```html name=app/templates/new_story.html
+{% extends "base.html" %}
+{% block title %}New Story{% endblock %}
+{% block content %}
+    <h2>Create a New Story</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.title.label }}<br>
+            {{ form.title(size=32) }}<br>
+            {% for error in form.title.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.content.label }}<br>
+            {{ form.content(cols=40, rows=5) }}<br>
+            {% for error in form.content.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock %}
+```
+
+#### `app/templates/add_to_story.html`
+
+```html name=app/templates/add_to_story.html
+{% extends "base.html" %}
+{% block title %}Add to Story{% endblock %}
+{% block content %}
+    <h2>Add to Story: {{ story.title }}</h2>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.content.label }}<br>
+            {{ form.content(cols=40, rows=5) }}<br>
+            {% for error in form.content.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock %}
+```
+
+### `requirements.txt`
+
+```plaintext name=requirements.txt
+Flask==2.0.1
+Flask-SQLAlchemy==2.5.1
+Flask-Bcrypt==0.7.1
+Flask-Login==0.5.0
+Flask-WTF==0.15.1
+```
+
+### `README.md`
+
+````markdown name=README.md
+# Collaborative Storytelling Game
+
+## Description
+
+A collaborative storytelling game where users can start new stories or contribute to existing ones. Once a user adds to a story, they cannot add again. Users can view stories they have contributed to on their homepage.
+
+## Features
+
+- User registration and login
+- Start a new story with a title and initial content
+- Add to an existing story but only once
+- View stories the user has contributed to on their homepage
+
+## Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/collaborative_storytelling.git
+```
+
+2. Change to the project directory:
+
+```bash
+cd collaborative_storytelling
+```
+
+3. Create a virtual environment:
+
+```bash
+python -m venv venv
+```
+
+4. Activate the virtual environment:
+
+- On Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+- On macOS/Linux:
+
+```bash
+source venv/bin/activate
+```
+
+5. Install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+6. Set up the database:
+
+```bash
+flask db init
+flask db migrate -m "Initial migration."
+flask db upgrade
+```
+
+7. Run the application:
+
+```bash
+python run.py
+```
+
+8. Open a web browser and go to `http://127.0.0.1:5000/` to access the application.
+
+## License
+
+This project is licensed under the MIT License.
+````
+
+This should provide a complete setup for the collaborative storytelling game/website using Flask, Python, and HTML. If you have any questions or need further assistance, feel free to ask!

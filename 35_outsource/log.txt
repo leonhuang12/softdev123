@@ -1,0 +1,28 @@
+CONVERSATION 1
+We prompted Copilot with the Scenario One directions word for word.
+Response
+    1. Returned a "high-level plan", similar to our design document, to complete the project.
+    2. Provided numerous files in TypeScript (.ts) for user auth, story management, database handling, and the actual server (which accesses MongoDB).
+    Note: While Copilot did create the files and functions, there is no actual code inside said functions. Only a comment saying what the function does.
+
+
+CONVERSATION 2
+Told Copilot to create a Flask App using only Python and HTML instead of TS.
+Enabled Copilot to search the Web for its response.
+Response 1
+    1. Returned a "Project Structure" in the form of a file tree.
+    2. Began outputting files "run.py", "config.py", and "app/__init__.py".
+    3. The tab unexpectedly crashed when opening the files in the browser.
+    Note: There was a notification titled "1 vulnerability detected", stating that "embedding credentials in source code risks unauthorized access". We do not know if this caused the crash.
+Response 2
+    Note: Reiterated the same instructions.
+    1. Returned the SAME Project Structure.
+    2. Returned files listed in the Project Structure, EXCEPT for "user_stories.html". In addition, files "run.py", "config.py", and "app/__init__.py" were marked as V2, while the ones in the previous response were marked as V1. There is no difference between the two versions, except in "__init__.py" where the code got cut off from the crash.
+    Note: Copilot used a module from Flask called SQLAlchemy, which is not supported on our machines.
+
+CONVERSATION 3
+Told Copilot to recreate the same project using only SQLite3 and our P0 requirements.txt.
+Response
+    1. Initially did not work. There was a sqlite3.OperationalError that we had to fix ourselves by adding "IF NOT EXISTS" in the "schema.sql" file.
+    2. Flask ran successfully, but then another error arose with werkzeug (werkzeug.routing.exceptions.BuildError) that we do not yet know how to fix.
+		3. Update: The error was due to "@InsertLogin". Removing these lines allowed our website to open.
